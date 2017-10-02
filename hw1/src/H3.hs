@@ -1,7 +1,5 @@
 module H3 where
 
-import           TreePrinters (Tree(..))
-
 -- Day of week
 data Day
   = Monday
@@ -32,7 +30,7 @@ isWeekend _ = False
 
 daysToParty :: Day -> Int
 daysToParty Friday = 0
-daysToParty x = (daysToParty (nextDay x)) + 1
+daysToParty x = daysToParty (nextDay x) + 1
 
 -- Monsters and players
 exampleMonsters :: [Monster]
@@ -98,7 +96,7 @@ data Result
 gloriousBattle :: Player -> [Monster] -> Result
 gloriousBattle p [] = PlayerWins {player = p}
 gloriousBattle p (m:ms) =
-  case (pvp True p m) of
+  case pvp True p m of
     Left mn -> MonsterWins {monster = mn}
     Right newP -> gloriousBattle newP ms
 
@@ -113,7 +111,7 @@ pvp False p m
 
 updateEquipment :: Player -> [Equipment] -> Player
 updateEquipment p [] = p
-updateEquipment p (x:xs) = updateEquipment (improve p x) xs
+updateEquipment p xs = foldl improve p xs
 
 improve :: Player -> Equipment -> Player
 improve p (Weapon ap) = p {attack = max ap (attack p)}
@@ -134,7 +132,7 @@ vecSum :: Num a => Vector a -> Vector a -> Vector a
 vecSum (Vector2D x1 y1) (Vector2D x2 y2) = Vector2D (x1 + x2) (y1 + y2)
 vecSum (Vector3D x1 y1 z1) (Vector3D x2 y2 z2) =
   Vector3D (x1 + x2) (y1 + y2) (z1 + z2)
-vecSum (Vector2D x1 y1) (Vector3D x2 y2 z2) = Vector3D (x1 + x2) (y1 + y2) (z2)
+vecSum (Vector2D x1 y1) (Vector3D x2 y2 z2) = Vector3D (x1 + x2) (y1 + y2) z2
 vecSum (Vector3D x1 y1 z1) (Vector2D x2 y2) =
   vecSum (Vector2D x2 y2) (Vector3D x1 y1 z1)
 
@@ -158,11 +156,11 @@ vecDist (Vector3D x1 y1 z1) (Vector2D x2 y2) =
 
 vecCrossProduct :: Num a => Vector a -> Vector a -> Vector a
 vecCrossProduct (Vector2D x1 y1) (Vector2D x2 y2) =
-  (Vector3D 0 0 (x1 * y2 - y1 * x2))
+  Vector3D 0 0 (x1 * y2 - y1 * x2)
 vecCrossProduct (Vector3D x1 y1 z1) (Vector3D x2 y2 z2) =
-  (Vector3D (y1 * z2 - z1 * y2) (z1 * x2 - x1 * z2) (x1 * y2 - y1 * x2))
+  Vector3D (y1 * z2 - z1 * y2) (z1 * x2 - x1 * z2) (x1 * y2 - y1 * x2)
 vecCrossProduct (Vector2D x1 y1) (Vector3D x2 y2 z2) =
-  (Vector3D (y1 * z2) (-x1 * z2) (x1 * y2 - y1 * x2))
+  Vector3D (y1 * z2) (-x1 * z2) (x1 * y2 - y1 * x2)
 vecCrossProduct (Vector3D x1 y1 z1) (Vector2D x2 y2) =
   vecCrossProduct (Vector2D (-x2) (-y2)) (Vector3D x1 y1 z1)
 
@@ -194,7 +192,7 @@ instance Num Nat where
 
 natToInteger :: Nat -> Int
 natToInteger Z = 0
-natToInteger (S x) = 1 + (natToInteger x)
+natToInteger (S x) = 1 + natToInteger x
 
 instance Eq Nat where
   (==) Z Z = True
@@ -207,13 +205,17 @@ instance Ord Nat where
   (<=) _ _ = False
 
 -- Find tree
+
+data Tree a = Leaf | Node a (Tree a) (Tree a)
+    deriving (Show)
+
 isEmpty :: Tree a -> Bool
 isEmpty Leaf = True
 isEmpty _ = False
 
 size :: Tree a -> Int
 size Leaf = 0
-size (Node _ l r) = 1 + (size l) + (size r)
+size (Node _ l r) = 1 + size l + size r
 
 find :: (Ord a) => a -> Tree a -> Maybe a
 find _ Leaf = Nothing
@@ -242,4 +244,4 @@ instance Foldable Tree where
 
 instance Ord a => Monoid (Tree a) where
   mempty = Leaf
-  mappend t1 t2 = foldr insert t1 t2
+  mappend = foldr insert 

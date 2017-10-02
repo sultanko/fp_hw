@@ -116,11 +116,8 @@ improve p (HealPot hr) = p {health = hr + health p}
 
 -- Vector 
 data Vector a
-  = Vector2D a
-             a
-  | Vector3D a
-             a
-             a
+  = Vector2D a a
+  | Vector3D a a a
 
 vecLength :: Floating a => Vector a -> a
 vecLength (Vector2D x y) = sqrt $ x ** 2 + y ** 2
@@ -163,10 +160,7 @@ vecCrossProduct (Vector3D x1 y1 z1) (Vector2D x2 y2) =
   vecCrossProduct (Vector2D (-x2) (-y2)) (Vector3D x1 y1 z1)
 
 -- Natural number
-data Nat
-  = Z
-  | S Nat
-  deriving (Show)
+data Nat = Z | S Nat 
 
 natSum :: Nat -> Nat -> Nat
 natSum x Z = x

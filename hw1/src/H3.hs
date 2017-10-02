@@ -35,10 +35,13 @@ daysToParty Friday = 0
 daysToParty x = (daysToParty (nextDay x)) + 1
 
 -- Monsters and players
+exampleMonsters :: [Monster]
 exampleMonsters = [rabbit, wolf, bear]
 
+examplePlayerWins :: Result
 examplePlayerWins = gloriousBattle (Player 100 100 100) exampleMonsters
 
+examplePlayerDies :: Result
 examplePlayerDies = gloriousBattle (Player 1 1 1) exampleMonsters
 
 data Monster = Monster
@@ -48,6 +51,7 @@ data Monster = Monster
   , equipments :: [Equipment]
   } deriving (Show, Eq)
 
+rabbit :: Monster
 rabbit =
   Monster
   { monsterName = "rabbit"
@@ -56,6 +60,7 @@ rabbit =
   , equipments = [HealPot 1]
   }
 
+wolf :: Monster
 wolf =
   Monster
   { monsterName = "wolf"
@@ -64,6 +69,7 @@ wolf =
   , equipments = [Weapon 10]
   }
 
+bear :: Monster
 bear =
   Monster
   { monsterName = "bear"
@@ -93,7 +99,7 @@ gloriousBattle :: Player -> [Monster] -> Result
 gloriousBattle p [] = PlayerWins {player = p}
 gloriousBattle p (m:ms) =
   case (pvp True p m) of
-    Left m -> MonsterWins {monster = m}
+    Left mn -> MonsterWins {monster = mn}
     Right newP -> gloriousBattle newP ms
 
 pvp :: Bool -> Player -> Monster -> Either Monster Player
@@ -115,6 +121,7 @@ improve p (Shield dp) = p {defense = max dp (defense p)}
 improve p (HealPot hr) = p {health = hr + health p}
 
 -- Vector 
+
 data Vector a
   = Vector2D a a
   | Vector3D a a a
@@ -135,7 +142,7 @@ vecScalar :: Num a => Vector a -> Vector a -> a
 vecScalar (Vector2D x1 y1) (Vector2D x2 y2) = (x1 * x2) + (y1 * y2)
 vecScalar (Vector3D x1 y1 z1) (Vector3D x2 y2 z2) =
   (x1 * x2) + (y1 * y2) + (z1 * z2)
-vecScalar (Vector2D x1 y1) (Vector3D x2 y2 z2) = (x1 * x2) + (y1 * y2)
+vecScalar (Vector2D x1 y1) (Vector3D x2 y2 _) = (x1 * x2) + (y1 * y2)
 vecScalar (Vector3D x1 y1 z1) (Vector2D x2 y2) =
   vecScalar (Vector2D x2 y2) (Vector3D x1 y1 z1)
 
@@ -144,7 +151,7 @@ vecDist (Vector2D x1 y1) (Vector2D x2 y2) =
   sqrt $ (x1 - x2) ** 2 + (y1 - y2) ** 2
 vecDist (Vector3D x1 y1 z1) (Vector3D x2 y2 z2) =
   sqrt $ (x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2
-vecDist (Vector2D x1 y1) (Vector3D x2 y2 z2) =
+vecDist (Vector2D x1 y1) (Vector3D x2 y2 _) =
   sqrt $ (x1 - x2) ** 2 + (y1 - y2) ** 2
 vecDist (Vector3D x1 y1 z1) (Vector2D x2 y2) =
   vecDist (Vector2D x2 y2) (Vector3D x1 y1 z1)
@@ -161,26 +168,33 @@ vecCrossProduct (Vector3D x1 y1 z1) (Vector2D x2 y2) =
 
 -- Natural number
 data Nat = Z | S Nat 
+  deriving (Show)
 
-natSum :: Nat -> Nat -> Nat
-natSum x Z = x
-natSum x (S y) = S $ natSum x y
+instance Num Nat where
+  (-) (S x) (S y) = x - y
+  x - Z = x
+  Z - _ = error "can't represent negative result"
+  
+  x + Z = x
+  x + (S y) = S (x + y)
 
-natMul :: Nat -> Nat -> Nat
-natMul Z y = Z
-natMul (S Z) y = y
-natMul (S x) y = natSum y $ natMul x y
+  Z * _ = Z
+  (S Z) * y = y
+  (S x) * y = y + (x * y)
+  
+  fromInteger n
+    | n > 0 = S $ fromInteger (n - 1)
+    | n == 0 = Z
+    | otherwise = error "number must be non-negative"
+  
+  abs x = x
 
-natSubtract :: Nat -> Nat -> Nat
-natSubtract (S x) (S y) = natSubtract x y
-natSubtract x Z = x
-natSubtract Z _ = error "can't represent negative result"
+  signum Z = 0
+  signum (S _) = 1
 
-natConstruct :: Int -> Nat
-natConstruct n
-  | n < 0 = error "number must be non-negative"
-  | n == 0 = Z
-  | n > 0 = S $ natConstruct (n - 1)
+natToInteger :: Nat -> Int
+natToInteger Z = 0
+natToInteger (S x) = 1 + (natToInteger x)
 
 instance Eq Nat where
   (==) Z Z = True
@@ -199,7 +213,7 @@ isEmpty _ = False
 
 size :: Tree a -> Int
 size Leaf = 0
-size (Node n l r) = 1 + (size l) + (size r)
+size (Node _ l r) = 1 + (size l) + (size r)
 
 find :: (Ord a) => a -> Tree a -> Maybe a
 find _ Leaf = Nothing
@@ -223,7 +237,7 @@ fromList :: (Ord a) => [a] -> Tree a
 fromList = foldr insert Leaf
 
 instance Foldable Tree where
-  foldMap f Leaf = mempty
+  foldMap _ Leaf = mempty
   foldMap f (Node v l r) = foldMap f l `mappend` f v `mappend` foldMap f r
 
 instance Ord a => Monoid (Tree a) where

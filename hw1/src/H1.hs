@@ -7,6 +7,7 @@ order3 :: Ord a => (a, a, a) -> (a, a, a)
 order3 (x, y, z) = (\([x1, x2, x3]) -> (x1, x2, x3)) (sort [x, y, z])
 
 highestBit :: Int -> Int
+highestBit 0 = error "Zero"
 highestBit 1 = 1
 highestBit n = 2 * (highestBit (n `div` 2))
 

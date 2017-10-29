@@ -8,3 +8,7 @@ splitOn d =
          then [] : s
          else (c : x) : xs)
     [[]]
+
+joinWith :: a -> [[a]] -> [a]
+joinWith _ [] = []
+joinWith c l = tail $ foldr (\x acc -> (c : x) ++ acc) [] l

@@ -9,28 +9,31 @@ data Day
   | Friday
   | Saturday
   | Sunday
+  deriving (Show)
 
 nextDay :: Day -> Day
-nextDay Monday = Tuesday
-nextDay Tuesday = Wednesday
+nextDay Monday    = Tuesday
+nextDay Tuesday   = Wednesday
 nextDay Wednesday = Thursday
-nextDay Thursday = Thursday
-nextDay Friday = Saturday
-nextDay Saturday = Sunday
-nextDay Sunday = Monday
+nextDay Thursday  = Friday
+nextDay Friday    = Saturday
+nextDay Saturday  = Sunday
+nextDay Sunday    = Monday
 
 afterDays :: Day -> Int -> Day
-afterDays x 0 = x
-afterDays x n = afterDays (nextDay x) (n - 1)
+afterDays x n 
+  | n == 0 = x
+  | n > 0  = afterDays (nextDay x) (n - 1)
+  | otherwise  = error "need positive int"
 
 isWeekend :: Day -> Bool
 isWeekend Saturday = True
-isWeekend Sunday = True
-isWeekend _ = False
+isWeekend Sunday   = True
+isWeekend _        = False
 
 daysToParty :: Day -> Int
 daysToParty Friday = 0
-daysToParty x = daysToParty (nextDay x) + 1
+daysToParty x      = daysToParty (nextDay x) + 1
 
 -- Monsters and players
 exampleMonsters :: [Monster]
@@ -129,18 +132,22 @@ vecLength (Vector2D x y) = sqrt $ x ** 2 + y ** 2
 vecLength (Vector3D x y z) = sqrt $ x ** 2 + y ** 2 + z ** 2
 
 vecSum :: Num a => Vector a -> Vector a -> Vector a
-vecSum (Vector2D x1 y1) (Vector2D x2 y2) = Vector2D (x1 + x2) (y1 + y2)
+vecSum (Vector2D x1 y1) (Vector2D x2 y2) = 
+  Vector2D (x1 + x2) (y1 + y2)
 vecSum (Vector3D x1 y1 z1) (Vector3D x2 y2 z2) =
   Vector3D (x1 + x2) (y1 + y2) (z1 + z2)
-vecSum (Vector2D x1 y1) (Vector3D x2 y2 z2) = Vector3D (x1 + x2) (y1 + y2) z2
+vecSum (Vector2D x1 y1) (Vector3D x2 y2 z2) = 
+  Vector3D (x1 + x2) (y1 + y2) z2
 vecSum (Vector3D x1 y1 z1) (Vector2D x2 y2) =
   vecSum (Vector2D x2 y2) (Vector3D x1 y1 z1)
 
 vecScalar :: Num a => Vector a -> Vector a -> a
-vecScalar (Vector2D x1 y1) (Vector2D x2 y2) = (x1 * x2) + (y1 * y2)
+vecScalar (Vector2D x1 y1) (Vector2D x2 y2) = 
+  (x1 * x2) + (y1 * y2)
 vecScalar (Vector3D x1 y1 z1) (Vector3D x2 y2 z2) =
   (x1 * x2) + (y1 * y2) + (z1 * z2)
-vecScalar (Vector2D x1 y1) (Vector3D x2 y2 _) = (x1 * x2) + (y1 * y2)
+vecScalar (Vector2D x1 y1) (Vector3D x2 y2 _) = 
+  (x1 * x2) + (y1 * y2)
 vecScalar (Vector3D x1 y1 z1) (Vector2D x2 y2) =
   vecScalar (Vector2D x2 y2) (Vector3D x1 y1 z1)
 
@@ -170,39 +177,39 @@ data Nat = Z | S Nat
 
 instance Num Nat where
   (-) (S x) (S y) = x - y
-  x - Z = x
-  Z - _ = error "can't represent negative result"
+  x - Z           = x
+  Z - _           = error "can't represent negative result"
   
-  x + Z = x
+  x + Z     = x
   x + (S y) = S (x + y)
 
-  Z * _ = Z
+  Z * _     = Z
   (S Z) * y = y
   (S x) * y = y + (x * y)
   
   fromInteger n
-    | n > 0 = S $ fromInteger (n - 1)
-    | n == 0 = Z
+    | n > 0     = S $ fromInteger (n - 1)
+    | n == 0    = Z
     | otherwise = error "number must be non-negative"
   
-  abs x = x
+  abs = id 
 
   signum Z = 0
   signum (S _) = 1
 
 natToInteger :: Nat -> Int
-natToInteger Z = 0
+natToInteger Z     = 0
 natToInteger (S x) = 1 + natToInteger x
 
 instance Eq Nat where
-  (==) Z Z = True
+  (==) Z Z         = True
   (==) (S x) (S y) = x == y
-  (==) _ _ = False
+  (==) _ _         = False
 
 instance Ord Nat where
-  (<=) (S x) (S y) = x < y
-  (<=) Z _ = True
-  (<=) _ _ = False
+  (<=) (S x) (S y) = x <= y
+  (<=) Z _         = True
+  (<=) _ _         = False
 
 -- Find tree
 
@@ -211,14 +218,14 @@ data Tree a = Leaf | Node a (Tree a) (Tree a)
 
 isEmpty :: Tree a -> Bool
 isEmpty Leaf = True
-isEmpty _ = False
+isEmpty _    = False
 
 size :: Tree a -> Int
-size Leaf = 0
+size Leaf         = 0
 size (Node _ l r) = 1 + size l + size r
 
 find :: (Ord a) => a -> Tree a -> Maybe a
-find _ Leaf = Nothing
+find _ Leaf  = Nothing
 find x (Node n left right)
   | n == x = Just n
   | x < n = find x left
@@ -232,16 +239,16 @@ insert x (Node n left right)
   | otherwise = Node n left (insert x right)
 
 toList :: Tree a -> [a]
-toList Leaf = []
+toList Leaf         = []
 toList (Node x l r) = toList l ++ [x] ++ toList r
 
 fromList :: (Ord a) => [a] -> Tree a
 fromList = foldr insert Leaf
 
 instance Foldable Tree where
-  foldMap _ Leaf = mempty
+  foldMap _ Leaf         = mempty
   foldMap f (Node v l r) = foldMap f l `mappend` f v `mappend` foldMap f r
 
 instance Ord a => Monoid (Tree a) where
-  mempty = Leaf
+  mempty  = Leaf
   mappend = foldr insert 
